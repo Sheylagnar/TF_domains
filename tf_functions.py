@@ -3,8 +3,8 @@ import pandas as pd
 import requests, sys
 
 # Paths
-INPUT_CSV = r"/home/shey/Documentos/inflamation/TF/appris_TF.csv"
-OUTPUT_CSV = r"/home/shey/Documentos/inflamation/TF/TF_completeIDs.csv"
+INPUT_CSV = r"/home/shey/Documentos/seqlab/TF/appris_TF.csv"
+OUTPUT_CSV = r"/home/shey/Documentos/seqlab/TF/TF_completeIDs.csv"
 
 # Ensembl headers
 BASE_URL = "https://rest.ensembl.org"
@@ -88,7 +88,7 @@ def fetch_transcript_names(ids, chunk=100, pause=0.2):
 def uni_from_ensps(ensps):
     ids = clean_ids(ensps)
     out = {}
-    for ensp in ensps:
+    for ensp in ids:
         r = session.get(f"{BASE_URL}/xrefs/id/{ensp}", timeout=30)
         if not r.ok:
             out[ensp] = None
@@ -127,16 +127,16 @@ seq_map = get_sequences(df["Translation ID"])
 df["Sequence aa"] = df["Translation ID"].astype(str).str.strip().map(seq_map)
 print(df[["Translation ID", "Sequence aa"]].head())
 
-# Isoform name
 name_map = fetch_transcript_names(df["Transcript ID"])
 df["Isoform name"] = df["Transcript ID"].astype(str).str.strip().map(name_map)
 
 # UniProt ID
-mask = df["Translation ID"].notna() & (
-    df["Translation ID"].astype(str).str.strip() != ""
+mask = (
+    df["Translation ID"].notna()
+    & (df["Translation ID"].astype(str).str.strip() != "")
+    & (df["Translation ID"].astype(str).str.strip() != "-")
 )
 ensps = df.loc[mask, "Translation ID"]
 ensp2uni = uni_from_ensps(ensps)
 df["UniProt_ID"] = df["Translation ID"].astype(str).str.strip().map(ensp2uni)
-
-df.to_csv("/home/shey/Documentos/inflamation/TF/TF_completeIDs.csv")
+df.to_csv(OUTPUT_CSV, index=False)

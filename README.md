@@ -1,2 +1,2 @@
 # TF_domains
-Update database of transcription factor domains
+Create database of transcription factor domains
